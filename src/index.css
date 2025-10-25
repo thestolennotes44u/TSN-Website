@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * ===============================================
+ * Overrides for Tailwind Typography Plugin
+ * This forces table cell alignment based on Markdown
+ * ===============================================
+*/
+
+/* 
+  The 'prose' class sets a default alignment. We need to override it.
+  These styles will apply to the generated HTML from your Markdown.
+*/
+
+.prose table td[align="left"] {
+  text-align: left;
+}
+
+.prose table td[align="center"] {
+  text-align: center;
+}
+
+.prose table td[align="right"] {
+  text-align: right;
+}
