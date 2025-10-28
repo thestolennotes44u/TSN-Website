@@ -1,10 +1,9 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from './Modal';
-import { LogoIcon } from './Icons';
+import { LogoIcon, SunIcon, MoonIcon } from './Icons';
 
 const LoginForm: React.FC<{onLoginSuccess: () => void}> = ({ onLoginSuccess }) => {
     const { login } = useAuth();
@@ -30,128 +29,83 @@ const LoginForm: React.FC<{onLoginSuccess: () => void}> = ({ onLoginSuccess }) =
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Admin Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-200"
-                    required
-                    autoComplete="email"
-                />
+                <label htmlFor="email" className="block text-sm font-medium text-body-text dark:text-dark-body-text">Admin Email</label>
+                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-background dark:bg-dark-background border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" required />
             </div>
             <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-200"
-                    required
-                    autoComplete="current-password"
-                />
+                <label htmlFor="password" className="block text-sm font-medium text-body-text dark:text-dark-body-text">Password</label>
+                <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-background dark:bg-dark-background border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" required />
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent dark:bg-dark-accent hover:opacity-90 disabled:opacity-50">
                 {isLoading ? 'Logging in...' : 'Login'}
             </button>
         </form>
     );
 };
 
+interface HeaderProps {
+    isSidebarOpen: boolean;
+}
 
-const Header: React.FC = () => {
-  
-  // FIXED: Changed themeClasses to themeStyles
-  const { settings, themeStyles } = useSettings();
-  const { pages } = useData();
-  const { isAuthenticated } = useAuth();
-  const [isLoginModalOpen, setLoginModalOpen] = React.useState(false);
-  const navigate = useNavigate();
+const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
+    const { settings, theme, toggleTheme } = useSettings();
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [isLoginModalOpen, setLoginModalOpen] = React.useState(false);
+    const [clickCount, setClickCount] = React.useState(0);
+    const clickTimeoutRef = React.useRef<number | null>(null);
 
-  const [clickCount, setClickCount] = React.useState(0);
-  const clickTimeoutRef = React.useRef<number | null>(null);
+    React.useEffect(() => {
+        return () => { if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current); };
+    }, []);
 
-  React.useEffect(() => {
-    return () => {
-        if (clickTimeoutRef.current) {
-            clearTimeout(clickTimeoutRef.current);
+    const handleAdminTriggerClick = () => {
+        if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+        const newClickCount = clickCount + 1;
+        setClickCount(newClickCount);
+        if (newClickCount >= 5) {
+            if (isAuthenticated) navigate('/admin');
+            else setLoginModalOpen(true);
+            setClickCount(0);
+        } else {
+            clickTimeoutRef.current = window.setTimeout(() => setClickCount(0), 1500);
         }
     };
-  }, []);
 
-  const visiblePages = pages.filter(p => p.isVisible);
-  
-  // FIXED: Replaced the old navLinkClasses with these two new functions
-  const navLinkClasses = ({isActive}: {isActive: boolean}) => 
-    `px-3 py-2 rounded-md text-sm font-medium ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`;
-
-  const navLinkStyles = ({isActive}: {isActive: boolean}): React.CSSProperties => 
-      isActive ? themeStyles.button : {};
-
-  const handleAdminTriggerClick = () => {
-    if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-    }
-
-    const newClickCount = clickCount + 1;
-    setClickCount(newClickCount);
-
-    if (newClickCount >= 5) {
-        if (isAuthenticated) {
-            navigate('/admin');
-        } else {
-            setLoginModalOpen(true);
-        }
-        setClickCount(0);
-    } else {
-        clickTimeoutRef.current = window.setTimeout(() => {
-            setClickCount(0);
-        }, 1500);
-    }
-  };
-
-  return (
-    <>
-      {/* FIXED: Switched to the style prop for the background color */}
-      <header className="shadow-md sticky top-0 z-40" style={themeStyles.card}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div onClick={handleAdminTriggerClick} className="flex items-center space-x-4 cursor-pointer" title="The Stolen Notes">
-                {settings?.logoUrl ? (
-                    <img src={settings.logoUrl} alt={`${settings.siteTitle} Logo`} className="h-14 w-auto pointer-events-none" />
-                ) : (
-                    // FIXED: Switched to the style prop for the accent color
-                    <LogoIcon className="h-12 w-12 pointer-events-none" style={themeStyles.accentText} />
-                )}
-                {/* FIXED: Switched to the style prop for the heading color */}
-                <span className="text-3xl font-bold pointer-events-none" style={themeStyles.primaryHeading}>
-                    {settings?.siteTitle || 'Loading...'}
-                </span>
-            </div>
-            <nav className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
-                {/* FIXED: Added style prop to NavLink */}
-                <NavLink to="/" className={navLinkClasses} style={navLinkStyles}>Home</NavLink>
-                {visiblePages.map(page => (
-                    // FIXED: Added style prop to NavLink
-                    <NavLink key={page.id} to={`/${page.slug}`} className={navLinkClasses} style={navLinkStyles}>
-                        {page.title}
-                    </NavLink>
-                ))}
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <Modal isOpen={isLoginModalOpen && !isAuthenticated} onClose={() => setLoginModalOpen(false)} title="Admin Login">
-          <LoginForm onLoginSuccess={() => { setLoginModalOpen(false); navigate('/admin'); }}/>
-      </Modal>
-    </>
-  );
+    return (
+        <>
+            <header className={`fixed top-0 right-0 shadow-md h-20 bg-card-bg dark:bg-dark-card-bg z-30 transition-all duration-300 ${isSidebarOpen ? 'left-0 md:left-56' : 'left-0'}`}>
+                <div className={`container mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${isSidebarOpen ? 'pl-4' : 'pl-20'}`}>
+                    <div className="flex items-center justify-between h-20">
+                        <div onClick={handleAdminTriggerClick} className="flex items-center space-x-4 cursor-pointer" title="The Stolen Notes">
+                            {settings?.logoUrl ? (
+                                <img src={settings.logoUrl} alt={`${settings.siteTitle} Logo`} className="h-14 w-auto pointer-events-none" />
+                            ) : (
+                                <LogoIcon className="h-12 w-12 pointer-events-none text-accent dark:text-dark-accent" />
+                            )}
+                            <span className="text-3xl font-bold pointer-events-none text-primary-heading dark:text-dark-primary-heading select-none">
+                                {settings?.siteTitle || 'Loading...'}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <button onClick={toggleTheme} className="p-2 rounded-full text-body-text dark:text-dark-body-text hover:bg-gray-200 dark:hover:bg-dark-card-bg focus:outline-none" aria-label="Toggle theme">
+                                {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
+                            </button>
+                            {isAuthenticated && (
+                                <button onClick={() => navigate('/admin')} className="hidden md:block px-3 py-2 rounded-md text-sm font-medium text-body-text dark:text-dark-body-text hover:bg-gray-200 dark:hover:bg-dark-card-bg">
+                                    Admin
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <Modal isOpen={isLoginModalOpen && !isAuthenticated} onClose={() => setLoginModalOpen(false)} title="Admin Login">
+                <LoginForm onLoginSuccess={() => { setLoginModalOpen(false); navigate('/admin'); }}/>
+            </Modal>
+        </>
+    );
 };
 
 export default Header;

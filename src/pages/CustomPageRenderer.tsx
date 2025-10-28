@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
-import { useData } from '../context/DataContext';
-import { useSettings } from '../context/SettingsContext';
 import type { CustomPage } from '../types';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -11,42 +8,40 @@ interface CustomPageRendererProps {
 }
 
 const CustomPageRenderer: React.FC<CustomPageRendererProps> = ({ page }) => {
-    const { themeStyles } = useSettings();
-    
-    // 1. Create a state variable to hold the final HTML
-const [cleanHtml, setCleanHtml] = useState('');
+    const [cleanHtml, setCleanHtml] = useState('');
 
-// 2. Use an effect to parse and sanitize the content when the page changes
-useEffect(() => {
-    const parseContent = async () => {
-        // Use 'await' to wait for the promise from marked.parse() to finish
-        const uncleanedHtml = await marked.parse(page.content || '');
-        
-        // Now that we have the real string, we can sanitize it
-        const sanitizedHtml = DOMPurify.sanitize(uncleanedHtml);
-        
-        // Update our state with the final, clean HTML
-        setCleanHtml(sanitizedHtml);
-    };
+    useEffect(() => {
+        const parseContent = async () => {
+            // Step 1: Parse the Markdown, enabling the GFM option which is required for tables.
+            const uncleanedHtml = await marked.parse(page.content || '', {
+                gfm: true,      // This is the critical option for GitHub Flavored Markdown (tables).
+                breaks: true,   // This makes single line breaks render as <br> tags.
+            });
+            
+            // Step 2: Sanitize the HTML, explicitly allowing all table-related tags.
+            const sanitizedHtml = DOMPurify.sanitize(uncleanedHtml, {
+                ADD_TAGS: ['table', 'thead', 'tbody', 'tr', 'th', 'td'],
+            });
+            
+            setCleanHtml(sanitizedHtml);
+        };
 
-    parseContent();
-}, [page.content]); // This effect re-runs whenever the page content changes
+        parseContent();
+    }, [page.content]);
 
     return (
-    <div className="container mx-auto p-4 md:p-8">
-        {/* Change #1: Apply the card style to this div */}
-        <div className="p-6 md:p-10 rounded-lg shadow-lg" style={themeStyles.card}>
-            
-            {/* Change #2: Apply the primary heading style to this h1 */}
-            <h1 className="text-4xl font-extrabold mb-6" style={themeStyles.primaryHeading}>{page.title}</h1>
-            
-            <div 
-                className="prose dark:prose-invert max-w-none" 
-                dangerouslySetInnerHTML={{ __html: cleanHtml}}
-            />
+        <div className="container mx-auto p-4 md:p-8">
+            <div className="p-6 md:p-10 rounded-lg shadow-lg bg-card-bg dark:bg-dark-card-bg">
+                <h1 className="text-4xl font-extrabold mb-6 text-primary-heading dark:text-dark-primary-heading">
+                    {page.title}
+                </h1>
+                <div 
+                    className="prose dark:prose-invert max-w-none text-body-text dark:text-dark-body-text" 
+                    dangerouslySetInnerHTML={{ __html: cleanHtml}}
+                />
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default CustomPageRenderer;
