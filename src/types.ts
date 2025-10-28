@@ -7,13 +7,18 @@ export const MembershipTiers = {
 
 export type TierKey = keyof typeof MembershipTiers;
 
+export interface SimpleUser {
+    uid: string;
+    email: string | null;
+}
+
 export interface HomepageContent {
-    id: string; // Should always be 'main'
+    id: string;
     welcomeTitle: string;
     welcomeText: string;
     showExtraSection: boolean;
     extraSectionTitle: string;
-    extraSectionContent: string; // Markdown
+    extraSectionContent: string;
 }
 
 export interface Stream { id: string; name: string; order?: number; }
@@ -29,6 +34,8 @@ export interface AppSettings {
     showByTierTab: boolean;
     showTestsTab: boolean;
     showFormsTab: boolean;
+    showWhatsNew: boolean;
+    showHomeExtra: boolean;
     backgroundColor: string;
 	cardColor: string;
 	bodyTextColor: string;

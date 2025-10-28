@@ -3,7 +3,7 @@ import { db } from '../firebaseConfig';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import type { Stream, Paper, ContentItem, CustomPage, CollectionName, HomepageContent } from '../types';
 
-const sortWithOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? Infinity) - (b.order ?? Infinity);
+const sortWithOrder = <T extends { id: string, order?: number }>(a: T, b: T) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.id.localeCompare(b.id);
 
 const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     id: 'main',
@@ -45,7 +45,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       onSnapshot(collection(db, collectionName), 
         (snapshot) => {
           const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          data.sort(sortWithOrder);
+          data.sort(sortWithOrder as any); // Use 'as any' to bypass complex generic error
           setters[collectionName](data);
         },
         (err) => { setError(`Failed to load ${collectionName}: ${err.message}`); }

@@ -1,5 +1,5 @@
 import type { Stream, Paper, ContentItem, CustomPage, AppSettings } from './types';
-import { MembershipTiers, type TierKey } from './types';
+import { type TierKey } from './types';
 
 export const DEFAULT_STREAMS: Stream[] = [ { id: 'stream-1', name: 'General Stream' }, { id: 'stream-2', name: 'Technical Stream' } ];
 export const DEFAULT_PAPERS: Paper[] = [ { id: 'paper-1', name: 'PC-01: Office Procedure', streamIds: ['stream-1'] } ];
@@ -10,6 +10,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     siteTitle: 'The Stolen Notes',
     logoUrl: '',
     adminEmail: 'admin@example.com',
+    showByPaperTab: true,
+    showByTierTab: true,
+    showTestsTab: true,
+    showFormsTab: true,
+    showWhatsNew: true,
+    showHomeExtra: true,
     backgroundColor: 'slate',
 	cardColor: 'white',
 	bodyTextColor: 'gray',
