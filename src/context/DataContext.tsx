@@ -3,7 +3,7 @@ import { db } from '../firebaseConfig';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import type { Stream, Paper, ContentItem, CustomPage, CollectionName, HomepageContent } from '../types';
 
-const sortWithOrder = <T extends { id: string, order?: number }>(a: T, b: T) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.id.localeCompare(b.id);
+const sortWithOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? Infinity) - (b.order ?? Infinity);
 
 const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     id: 'main',
@@ -24,6 +24,7 @@ interface DataContextType {
   error: string | null;
   addOrUpdateDoc: (collectionName: CollectionName | 'config', data: any) => Promise<void>;
   deleteDocById: (collectionName: CollectionName, id: string) => Promise<void>;
+  updateHomepageContent: (data: HomepageContent) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -45,7 +46,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       onSnapshot(collection(db, collectionName), 
         (snapshot) => {
           const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          data.sort(sortWithOrder as any); // Use 'as any' to bypass complex generic error
+          data.sort(sortWithOrder as any);
           setters[collectionName](data);
         },
         (err) => { setError(`Failed to load ${collectionName}: ${err.message}`); }
@@ -77,8 +78,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const docRef = doc(db, collectionName, id);
     await deleteDoc(docRef);
   };
+  
+  const updateHomepageContent = async (data: HomepageContent) => {
+    const docRef = doc(db, 'config', 'homepage');
+    await setDoc(docRef, data, { merge: true });
+  };
 
-  const value = { streams, papers, contentItems, pages, homepageContent, loading, error, addOrUpdateDoc, deleteDocById };
+  const value = { streams, papers, contentItems, pages, homepageContent, loading, error, addOrUpdateDoc, deleteDocById, updateHomepageContent };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
